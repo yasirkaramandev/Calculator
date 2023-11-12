@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*- sa
+# -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+import math
 
 class Ui_HesapMakinesi(object):
     def setupUi(self, HesapMakinesi):
@@ -11,6 +11,8 @@ class Ui_HesapMakinesi(object):
         HesapMakinesi.setMaximumSize(QtCore.QSize(420, 625))
         HesapMakinesi.setWindowOpacity(1.0)
         HesapMakinesi.setStyleSheet("background-color: #1A2030;")
+        self.numeric = "0"
+        self.islem = ""
         self.centralwidget = QtWidgets.QWidget(HesapMakinesi)
         self.centralwidget.setObjectName("centralwidget")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
@@ -684,31 +686,156 @@ class Ui_HesapMakinesi(object):
         self.baslikLabel.setText(_translate("HesapMakinesi", "<html><head/><body><p><span style=\" font-size:20pt;\">Standart</span></p></body></html>"))
         self.sonucLineEdit.setText(_translate("HesapMakinesi", "0"))
         self.cikarmaButton.setText(_translate("HesapMakinesi", "-"))
+        self.cikarmaButton.clicked.connect(lambda x : self.operation("-"))
         self.bolmeButton.setText(_translate("HesapMakinesi", "÷"))
+        self.bolmeButton.clicked.connect(lambda x : self.operation("/"))
         self.CButton.setText(_translate("HesapMakinesi", "C"))
+        self.CButton.clicked.connect(lambda x : self.operation("C"))
         self.kokAlButton.setText(_translate("HesapMakinesi", "²√x"))
+        self.kokAlButton.clicked.connect(lambda x : self.operation("kok"))
         self.deleteButton.setText(_translate("HesapMakinesi", "←"))
+        self.deleteButton.clicked.connect(lambda x : self.operation("delete"))
         self.toplamaButton.setText(_translate("HesapMakinesi", "+"))
+        self.toplamaButton.clicked.connect(lambda x : self.operation("+"))
         self.CEButton.setText(_translate("HesapMakinesi", "CE"))
+        self.CEButton.clicked.connect(lambda x : self.operation("CE"))
         self.kareAlButton.setText(_translate("HesapMakinesi", "x²"))
+        self.kareAlButton.clicked.connect(lambda x : self.operation("kare"))
         self.birBoluButton.setText(_translate("HesapMakinesi", "⅟x"))
+        self.birBoluButton.clicked.connect(lambda x : self.operation("birbol"))
         self.carpmaButton.setText(_translate("HesapMakinesi", "ⅹ"))
+        self.carpmaButton.clicked.connect(lambda x : self.operation("*"))
         self.yuzdeButton.setText(_translate("HesapMakinesi", "%"))
+        self.yuzdeButton.clicked.connect(lambda x : self.operation("%"))
         self.esittirButton.setText(_translate("HesapMakinesi", "="))
+        self.esittirButton.clicked.connect(lambda x : self.operation("="))
         self.sifirButton.setText(_translate("HesapMakinesi", "0"))
+        self.sifirButton.clicked.connect(lambda x : self.numbers(0))
         self.virgulButton.setText(_translate("HesapMakinesi", ","))
+        self.virgulButton.clicked.connect(lambda x : self.numbers(","))
         self.artiEksiButton.setText(_translate("HesapMakinesi", "±"))
+        self.artiEksiButton.clicked.connect(lambda x : self.numbers("-/+"))
         self.birButton.setText(_translate("HesapMakinesi", "1"))
+        self.birButton.clicked.connect(lambda x : self.numbers(1))
         self.ikiButton.setText(_translate("HesapMakinesi", "2"))
+        self.ikiButton.clicked.connect(lambda x : self.numbers(2))
         self.ucButton.setText(_translate("HesapMakinesi", "3"))
+        self.ucButton.clicked.connect(lambda x : self.numbers(3))
         self.dortButton.setText(_translate("HesapMakinesi", "4"))
+        self.dortButton.clicked.connect(lambda x : self.numbers(4))
         self.besButton.setText(_translate("HesapMakinesi", "5"))
+        self.besButton.clicked.connect(lambda x : self.numbers(5))
         self.altiButton.setText(_translate("HesapMakinesi", "6"))
+        self.altiButton.clicked.connect(lambda x : self.numbers(6))
         self.yediButton.setText(_translate("HesapMakinesi", "7"))
+        self.yediButton.clicked.connect(lambda x : self.numbers(7))
         self.sekizButton.setText(_translate("HesapMakinesi", "8"))
+        self.sekizButton.clicked.connect(lambda x : self.numbers(8))
         self.dokuzButton.setText(_translate("HesapMakinesi", "9"))
+        self.dokuzButton.clicked.connect(lambda x : self.numbers(9))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("HesapMakinesi", "Tab 1"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("HesapMakinesi", "Tab 2"))
+
+    
+    def numbers(self, number):
+        totalNumber = sum(c.isdigit() for c in self.numeric)
+        if number == "-/+" and self.numeric[0] != "-":
+            if self.numeric == "0":
+                pass
+            else:
+                self.numeric = "-" + self.numeric
+        elif number == "-/+" and self.numeric[0] == "-":
+            self.numeric = self.numeric[1:]
+        elif totalNumber <= 14:
+            if number == "," and "," in self.numeric:
+                # Sadece "," varsa ve gelen sayı da "," ise bir şey yapma
+                pass
+            else:
+                if self.numeric == "0" and number == "0":
+                    # Sadece "0" varsa ve gelen number da "0"  ise bir şey yapma
+                    pass
+                else:
+                    if self.numeric == "0" and number == ",":
+                        # Sadece "0" varsa ve gelen sayı "0," ise "0" ı sil ve "0," eklenir
+                        self.numeric = "0,"
+                    elif self.numeric == "0" and number != "0":
+                        # Sadece "0" varsa ve gelen number "0" değilse, "0" ı sil ve yeni sayıyı ekle
+                        self.numeric = str(number)
+                    
+                    else:
+                        self.numeric += str(number)
+        else: print(f"MAKS SINIR 15 {totalNumber}")
+        self.numberArea()
+
+# OP: -,+,*,/,C,kok,CE,=,birbol,kare,%
+    def operation(self,op):
+        _translate = QtCore.QCoreApplication.translate
+        if op == "delete":
+            self.numeric = self.numeric[:-1]
+        elif op == "-":
+            self.islemSonuc("-")
+        elif op == "+":
+            self.islemSonuc("+")
+        elif op == "*":
+            self.islemSonuc("*")
+        elif op == "/":
+            self.islemSonuc("/")
+        elif op == "C":
+            self.numeric = ""
+            self.islem = ""
+            self.islemSonuc("C")
+            self.numberArea()
+        elif op == "kok":
+           
+            try:
+                kok = float(math.sqrt(int(self.numeric)))
+                kok = "{:.5f}".format(kok)
+            except Exception as e:
+                 kok = "NaN"
+            self.sonucLineEdit.setText(_translate("HesapMakinesi", f"{kok}")) 
+            self.islemSonuc("kok")
+        elif op == "CE":
+            self.numeric = ""
+            self.numberArea()
+        elif op == "=":
+            pass
+        elif op == "birbol":
+            pass
+        elif op == "kare":
+            pass
+        elif op == "%":
+            pass
+    def numberArea(self, islem=None):
+        _translate = QtCore.QCoreApplication.translate
+        if self.numeric == "" or self.numeric == "-":
+            self.numeric = "0"
+        self.sonucLineEdit.setText(_translate("HesapMakinesi", f"{self.numeric}"))
+
+    def islemSonuc(self, islem):
+        _translate = QtCore.QCoreApplication.translate
+        if islem == "C":
+            self.yukariSonucLineEdit.setText(_translate("HesapMakinesi", ""))
+            self.islem = ""  # 'C' tuşuna basıldığında tüm işlemi temizle
+        elif islem in ["+", "-", "*", "/"]:
+            self.islem += f"{self.numeric} {islem}"
+            place = self.islem.replace(".", ",").replace("*", "x").replace("/", "÷")
+            self.yukariSonucLineEdit.setText(_translate("HesapMakinesi", f"{place}"))
+            self.numeric = ""
+            self.numberArea()
+        elif islem == "kok":
+            if self.numeric != "":
+                self.islem += f"√{self.numeric}"
+                self.numeric = ""
+            place = self.islem.replace(".", ",").replace("*", "x").replace("/", "÷")
+            self.yukariSonucLineEdit.setText(_translate("HesapMakinesi", f"{place}"))
+        else:
+            if "√" in self.islem:
+                self.islem = ""  # Önceki kök işlemi temizle
+            self.islem += self.numeric
+            place = self.islem.replace(".", ",").replace("*", "x").replace("/", "÷")
+            self.yukariSonucLineEdit.setText(_translate("HesapMakinesi", f"{place}"))
+            self.numeric = ""
+
 
 
 if __name__ == "__main__":
